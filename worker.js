@@ -2390,7 +2390,7 @@ const INDEX_PAGE = `
     </button>
     <div class="logo-area">
       <div class="logo-icon">
-        <svg viewBox="0 0 87.3 78" style="width:32px; height:auto;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 87.3 78" style="width:32px; height:auto;">
           <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
           <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/>
           <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/>
@@ -2627,7 +2627,60 @@ const INDEX_PAGE = `
     let currentPath = '/';
     let ctxFile = null;
     let allFiles = []; // For filtering
-    
+    let sortField = 'name';   // 默认按名称排序
+    let sortOrder = 'asc';    // 默认正序
+
+    // 对文件数组进行排序（不改变原数组）
+    function sortFileList(files) {
+      if (!sortField || !files) return files;
+      const order = sortOrder === 'asc' ? 1 : -1;
+      return [...files].sort((a, b) => {
+        let valA, valB;
+        if (sortField === 'name') {
+          valA = a.name.toLowerCase();
+          valB = b.name.toLowerCase();
+        } else if (sortField === 'size') {
+          valA = a.size || 0;
+          valB = b.size || 0;
+        } else if (sortField === 'modified') {
+          valA = new Date(a.lastModified || 0).getTime();
+          valB = new Date(b.lastModified || 0).getTime();
+        }
+        if (valA < valB) return -1 * order;
+        if (valA > valB) return 1 * order;
+        return 0;
+      });
+    }
+
+    // 对文件夹数组进行排序（按名称排序，方向跟随文件名称排序）
+    function sortFolderList(folders) {
+      if (!folders) return folders;
+
+      // 仅当 sortField 为 'name' 时才排序，否则保持原序（默认正序）
+
+      if (sortField !== 'name') return folders;
+      const order = sortOrder === 'asc' ? 1 : -1;
+      return [...folders].sort((a, b) => {
+        const valA = a.name.toLowerCase();
+        const valB = b.name.toLowerCase();
+        if (valA < valB) return -1 * order;
+        if (valA > valB) return 1 * order;
+        return 0;
+      });
+    }
+
+    // 切换排序字段或方向，并重新渲染
+    function toggleSort(field) {
+      if (sortField === field) {
+        sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortField = field;
+        sortOrder = 'asc';   // 切换到新字段时默认正序
+      }
+      // 重新从 allFiles 中取出数据渲染应用排序
+      renderFiles(allFiles.folders || [], allFiles.files || []);
+    }
+
     function encodeApiPath(path) {
         if (!path || path === '/') return '/';
         let cleanPath = path;
@@ -2771,12 +2824,22 @@ const INDEX_PAGE = `
     function renderFiles(folders, files) {
       var container = document.getElementById('fileContainer');
       var emptyState = document.getElementById('emptyState');
-      
+
       // 清空容器
       while (container.firstChild) {
         container.removeChild(container.firstChild);
       }
-      
+
+      // 对文件夹进行排序
+      if (folders && folders.length > 0) {
+        folders = sortFolderList(folders);
+      }
+
+      // 对文件进行排序
+      if (files && files.length > 0) {
+        files = sortFileList(files);
+      }
+
       if (folders.length === 0 && files.length === 0) {
         emptyState.style.display = 'flex';
         return;
@@ -2903,7 +2966,17 @@ const INDEX_PAGE = `
         
         var listHeader = document.createElement('div');
         listHeader.className = 'list-header';
-        listHeader.innerHTML = '<div class="list-header-name">名称</div><div class="list-header-actions"></div>';
+
+        var nameHeader = document.createElement('div');
+        nameHeader.className = 'list-header-name sortable';
+        nameHeader.innerHTML = '名称' + (sortField === 'name' ? (sortOrder === 'asc' ? ' ▲' : ' ▼') : '');
+        nameHeader.onclick = function() { toggleSort('name'); };
+
+        var actionsHeader = document.createElement('div');
+        actionsHeader.className = 'list-header-actions';
+
+        listHeader.appendChild(nameHeader);
+        listHeader.appendChild(actionsHeader);
         listView.appendChild(listHeader);
         
         folders.forEach(function(folder) {
@@ -2954,9 +3027,32 @@ const INDEX_PAGE = `
         var listView = document.createElement('div');
         listView.className = 'list-view';
         
+        // 动态生成可排序的表头
         var listHeader = document.createElement('div');
         listHeader.className = 'list-header';
-        listHeader.innerHTML = '<div class="list-header-name">名称</div><div class="list-header-size">大小</div><div class="list-header-date">修改时间</div><div class="list-header-actions"></div>';
+
+        var nameHeader = document.createElement('div');
+        nameHeader.className = 'list-header-name sortable';
+        nameHeader.innerHTML = '名称' + (sortField === 'name' ? (sortOrder === 'asc' ? ' ▲' : ' ▼') : '');
+        nameHeader.onclick = function() { toggleSort('name'); };
+
+        var sizeHeader = document.createElement('div');
+        sizeHeader.className = 'list-header-size sortable';
+        sizeHeader.innerHTML = '大小' + (sortField === 'size' ? (sortOrder === 'asc' ? ' ▲' : ' ▼') : '');
+        sizeHeader.onclick = function() { toggleSort('size'); };
+
+        var dateHeader = document.createElement('div');
+        dateHeader.className = 'list-header-date sortable';
+        dateHeader.innerHTML = '修改时间' + (sortField === 'modified' ? (sortOrder === 'asc' ? ' ▲' : ' ▼') : '');
+        dateHeader.onclick = function() { toggleSort('modified'); };
+
+        var actionsHeader = document.createElement('div');
+        actionsHeader.className = 'list-header-actions';
+
+        listHeader.appendChild(nameHeader);
+        listHeader.appendChild(sizeHeader);
+        listHeader.appendChild(dateHeader);
+        listHeader.appendChild(actionsHeader);
         listView.appendChild(listHeader);
         
         files.forEach(function(file) {
@@ -3531,6 +3627,14 @@ const ADMIN_PAGE = `
       font-size: 14px;
       color: var(--text-sub);
       font-weight: 500;
+    }
+
+    .sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+    .sortable:hover {
+      color: var(--primary);
     }
 
     /* Tables */
