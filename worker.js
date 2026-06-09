@@ -2265,6 +2265,7 @@ const LOGIN_PAGE = `
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 87.3 78'%3E%3Cpath d='m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z' fill='%230066da'/%3E%3Cpath d='m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z' fill='%2300ac47'/%3E%3Cpath d='m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z' fill='%23ea4335'/%3E%3Cpath d='m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z' fill='%2300832d'/%3E%3Cpath d='m59.8 53h-27.5l13.75 23.8c1.35-.8 2.5-1.9 3.3-3.3l13.75-23.8z' fill='%232684fc'/%3E%3Cpath d='m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 29.75 51.5c1.35-.8 2.5-1.9 3.3-3.3l7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5 0-1.55-.4-3.1-1.2-4.5z' fill='%23ffba00'/%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>登录 - EdgeStash</title>
   ${CSS_STYLES}
@@ -2376,6 +2377,7 @@ const INDEX_PAGE = `
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 87.3 78'%3E%3Cpath d='m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z' fill='%230066da'/%3E%3Cpath d='m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z' fill='%2300ac47'/%3E%3Cpath d='m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z' fill='%23ea4335'/%3E%3Cpath d='m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z' fill='%2300832d'/%3E%3Cpath d='m59.8 53h-27.5l13.75 23.8c1.35-.8 2.5-1.9 3.3-3.3l13.75-23.8z' fill='%232684fc'/%3E%3Cpath d='m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 29.75 51.5c1.35-.8 2.5-1.9 3.3-3.3l7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5 0-1.55-.4-3.1-1.2-4.5z' fill='%23ffba00'/%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的云端硬盘 - EdgeStash</title>
   ${CSS_STYLES}
@@ -2629,6 +2631,7 @@ const INDEX_PAGE = `
     let allFiles = []; // For filtering
     let sortField = 'name';   // 默认按名称排序
     let sortOrder = 'asc';    // 默认正序
+    let currentPreviewTextContainer = null;   // 当前预览的文本容器元素
 
     // 对文件数组进行排序（不改变原数组）
     function sortFileList(files) {
@@ -2652,12 +2655,10 @@ const INDEX_PAGE = `
       });
     }
 
-    // 对文件夹数组进行排序（按名称排序，方向跟随文件名称排序）
+    // 对文件夹数组进行排序（仅支持按名称排序，方向跟随文件名称排序）
     function sortFolderList(folders) {
       if (!folders) return folders;
-
       // 仅当 sortField 为 'name' 时才排序，否则保持原序（默认正序）
-
       if (sortField !== 'name') return folders;
       const order = sortOrder === 'asc' ? 1 : -1;
       return [...folders].sort((a, b) => {
@@ -2677,7 +2678,7 @@ const INDEX_PAGE = `
         sortField = field;
         sortOrder = 'asc';   // 切换到新字段时默认正序
       }
-      // 重新从 allFiles 中取出数据渲染应用排序
+      // 重新从 allFiles 中取出数据渲染（会应用排序）
       renderFiles(allFiles.folders || [], allFiles.files || []);
     }
 
@@ -2825,7 +2826,6 @@ const INDEX_PAGE = `
       var container = document.getElementById('fileContainer');
       var emptyState = document.getElementById('emptyState');
 
-      // 清空容器
       while (container.firstChild) {
         container.removeChild(container.firstChild);
       }
@@ -3419,36 +3419,86 @@ const INDEX_PAGE = `
       window.open('/api/download?path=' + encodeURIComponent(path), '_blank');
     }
 
-    // Preview Logic (Simplified)
+    // 防止选中浮窗背后文本
+    function onKeydownForPreview(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+            const overlay = document.getElementById('previewOverlay');
+            if (overlay && overlay.classList.contains('active')) {
+            // 如果当前有文本预览容器，则全选该容器内的文本
+            if (currentPreviewTextContainer) {
+                e.preventDefault();
+                // 选中文本容器中的所有内容
+                const range = document.createRange();
+                range.selectNodeContents(currentPreviewTextContainer);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            } else {
+                // 非文本预览
+                e.preventDefault();
+            }
+            }
+        }
+    }
+
+    // Preview Logic
     async function previewFile(path, type, name) {
-       const overlay = document.getElementById('previewOverlay');
-       const content = document.getElementById('previewContent');
-       overlay.classList.add('active');
-       content.innerHTML = '<div class="spinner"></div>';
-       
-       const url = '/api/preview' + encodeApiPath(path);
-       
-       if(type === 'image') content.innerHTML = '<img src="'+url+'" style="max-width:100%; max-height:100%;">';
-       else if(type === 'video') content.innerHTML = '<video controls autoplay src="'+url+'" style="max-width:100%;"></video>';
-       else if(type === 'audio') content.innerHTML = '<audio controls autoplay src="'+url+'"></audio>';
-       else if(type === 'pdf') content.innerHTML = '<iframe src="'+url+'" style="width:100%; height:100%; border:none;"></iframe>';
-       else if(type === 'text' || type === 'word') {
-          const res = await fetch(url);
-          if(type === 'word') {
-             const buff = await res.arrayBuffer();
-             const resHtml = await mammoth.convertToHtml({arrayBuffer: buff});
-             content.innerHTML = '<div style="padding:20px; overflow:auto; width:100%; height:100%;">' + resHtml.value + '</div>';
-          } else {
-             const text = await res.text();
-             const isMd = name.endsWith('.md');
-             content.innerHTML = '<div style="padding:20px; overflow:auto; width:100%; height:100%; white-space:pre-wrap; font-family:monospace;">' + (isMd ? marked.parse(text) : escapeHtml(text)) + '</div>';
-          }
-       }
+        document.removeEventListener('keydown', onKeydownForPreview);
+        document.addEventListener('keydown', onKeydownForPreview);
+
+        const overlay = document.getElementById('previewOverlay');
+        const content = document.getElementById('previewContent');
+        overlay.classList.add('active');
+        content.innerHTML = '<div class="spinner"></div>';
+        currentPreviewTextContainer = null;
+
+        const url = '/api/preview' + encodeApiPath(path);
+
+        if (type === 'image') {
+            content.innerHTML = '<img src="'+url+'" style="max-width:100%; max-height:100%;">';
+        } else if (type === 'video') {
+            content.innerHTML = '<video controls autoplay src="'+url+'" style="max-width:100%;"></video>';
+        } else if (type === 'audio') {
+            content.innerHTML = '<audio controls autoplay src="'+url+'"></audio>';
+        } else if (type === 'pdf') {
+            content.innerHTML = '<iframe src="'+url+'" style="width:100%; height:100%; border:none;"></iframe>';
+        } else if (type === 'text' || type === 'word') {
+            const res = await fetch(url);
+            if (type === 'word') {
+            const buff = await res.arrayBuffer();
+            const resHtml = await mammoth.convertToHtml({arrayBuffer: buff});
+            const wrapper = document.createElement('div');
+            wrapper.style.padding = '20px';
+            wrapper.style.overflow = 'auto';
+            wrapper.style.width = '100%';
+            wrapper.style.height = '100%';
+            wrapper.innerHTML = resHtml.value;
+            content.innerHTML = '';
+            content.appendChild(wrapper);
+            currentPreviewTextContainer = wrapper;
+            } else {
+            const text = await res.text();
+            const isMd = name.endsWith('.md');
+            const wrapper = document.createElement('div');
+            wrapper.style.padding = '20px';
+            wrapper.style.overflow = 'auto';
+            wrapper.style.width = '100%';
+            wrapper.style.height = '100%';
+            wrapper.style.whiteSpace = 'pre-wrap';
+            wrapper.style.fontFamily = 'monospace';
+            wrapper.innerHTML = isMd ? marked.parse(text) : escapeHtml(text);
+            content.innerHTML = '';
+            content.appendChild(wrapper);
+            currentPreviewTextContainer = wrapper;
+            }
+        }
     }
     
     function closePreview() {
       document.getElementById('previewOverlay').classList.remove('active');
       document.getElementById('previewContent').innerHTML = '';
+      document.removeEventListener('keydown', onKeydownForPreview);
+      currentPreviewTextContainer = null;
     }
 
     function showLoading(show) {
@@ -3567,6 +3617,7 @@ const ADMIN_PAGE = `
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 87.3 78'%3E%3Cpath d='m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z' fill='%230066da'/%3E%3Cpath d='m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z' fill='%2300ac47'/%3E%3Cpath d='m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z' fill='%23ea4335'/%3E%3Cpath d='m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z' fill='%2300832d'/%3E%3Cpath d='m59.8 53h-27.5l13.75 23.8c1.35-.8 2.5-1.9 3.3-3.3l13.75-23.8z' fill='%232684fc'/%3E%3Cpath d='m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 29.75 51.5c1.35-.8 2.5-1.9 3.3-3.3l7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5 0-1.55-.4-3.1-1.2-4.5z' fill='%23ffba00'/%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理控制台 - EdgeStash</title>
   ${CSS_STYLES}
@@ -4120,6 +4171,7 @@ const SHARE_PAGE = `
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 87.3 78'%3E%3Cpath d='m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z' fill='%230066da'/%3E%3Cpath d='m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z' fill='%2300ac47'/%3E%3Cpath d='m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z' fill='%23ea4335'/%3E%3Cpath d='m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z' fill='%2300832d'/%3E%3Cpath d='m59.8 53h-27.5l13.75 23.8c1.35-.8 2.5-1.9 3.3-3.3l13.75-23.8z' fill='%232684fc'/%3E%3Cpath d='m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 29.75 51.5c1.35-.8 2.5-1.9 3.3-3.3l7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5 0-1.55-.4-3.1-1.2-4.5z' fill='%23ffba00'/%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>文件分享 - EdgeStash</title>
   ${CSS_STYLES}
